@@ -1,10 +1,10 @@
 #include <SoftwareSerial.h> 
 SoftwareSerial mySerial(12, 13); // RX, TX
 
-#define IN1 2	// L298N Back (blue)
-#define IN2 3	// L298N Forward  (green)
-#define IN3 4	// L298N Left (yellow)
-#define IN4 5	// L298N Right (orange)
+#define back 2	// L298N back (blue)
+#define forward 3	// L298N forward (green)
+#define left 4	// L298N left (yellow)
+#define right 5	// L298N right (orange)
 
 char i;
 
@@ -17,58 +17,63 @@ void turnBackRight();
 void turnBackLeft();
 
 void _stop(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+	digitalWrite(back, LOW);
+	digitalWrite(forward, LOW);
+	digitalWrite(left, LOW);
+	digitalWrite(right, LOW);
 }
 void forward(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+	digitalWrite(back, LOW);
+	digitalWrite(forward, HIGH);
+	digitalWrite(left, LOW);
+	digitalWrite(right, LOW);
 }
 void back(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+	digitalWrite(back, HIGH);
+	digitalWrite(forward, LOW);
+	digitalWrite(left, LOW);
+	digitalWrite(right, LOW);
 }
 void forwardRight(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, HIGH);
+	digitalWrite(back, LOW);
+	digitalWrite(forward, HIGH);
+	digitalWrite(left, LOW);
+	digitalWrite(right, HIGH);
 }
 void forwardLeft(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, HIGH);
-	digitalWrite(IN4, LOW);
+	digitalWrite(back, LOW);
+	digitalWrite(forward, HIGH);
+	digitalWrite(left, HIGH);
+	digitalWrite(right, LOW);
 }
 void backRight(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, HIGH);
+	digitalWrite(back, HIGH);
+	digitalWrite(forward, LOW);
+	digitalWrite(left, LOW);
+	digitalWrite(right, HIGH);
 }
 void backLeft(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, HIGH);
-	digitalWrite(IN4, LOW);
+	digitalWrite(back, HIGH);
+	digitalWrite(forward, LOW);
+	digitalWrite(left, HIGH);
+	digitalWrite(right, LOW);
 }
 
 void setup(){
     Serial.begin(9600);
  
     // HC-06 default serial speed is 9600
-    mySerial.begin(9600);  
+    mySerial.begin(9600);
+
+    pinMode(back, OUTPUT);
+    pinMode(forward, OUTPUT);
+    pinMode(left, OUTPUT);
+    pinMode(right, OUTPUT);
 }
 
 void loop(){
 	if(mySerial.available()>0){
-		i=(char)mySerial.read();
+		i = (char)mySerial.read();
     
 		switch(i){
 			case'1':{
@@ -101,5 +106,8 @@ void loop(){
 			}
 		}
 	}
+	/*
+	
+	*/
 }
 
