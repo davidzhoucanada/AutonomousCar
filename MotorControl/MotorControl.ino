@@ -1,5 +1,5 @@
 #include <SoftwareSerial.h> 
-SoftwareSerial mySerial(10, 11); // RX, TX
+SoftwareSerial mySerial(12, 13); // RX, TX
 
 #define IN1 2	// L298N Back (blue)
 #define IN2 3	// L298N Forward  (green)
@@ -59,8 +59,7 @@ void backLeft(){
 	digitalWrite(IN4, LOW);
 }
 
-void setup() 
-{
+void setup(){
     Serial.begin(9600);
  
     // HC-06 default serial speed is 9600
@@ -68,7 +67,6 @@ void setup()
 }
 
 void loop(){
-	
 	if(mySerial.available()>0){
 		i=(char)mySerial.read();
     
