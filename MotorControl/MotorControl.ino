@@ -5,6 +5,10 @@ SoftwareSerial mySerial(12, 13); // RX, TX
 #define forward 3	// L298N forward (green)
 #define left 4	// L298N left (yellow)
 #define right 5	// L298N right (orange)
+#define trigRight 8 // HC-SR04 trig right
+#define echoRight 9 // HC-SR04 echo right
+#define trigLeft 10 // HC-SR04 trig left
+#define echoLeft 11	// HC-SR04 echo left
 
 char i;
 
@@ -69,6 +73,10 @@ void setup(){
     pinMode(forward, OUTPUT);
     pinMode(left, OUTPUT);
     pinMode(right, OUTPUT);
+    pinMode(trigRight, OUTPUT);
+    pinMode(echoRight, INPUT);
+    pinMode(trigLeft, OUTPUT);
+    pinMode(echoLeft, INPUT);
 }
 
 void loop(){
@@ -107,7 +115,8 @@ void loop(){
 		}
 	}
 	/*
-	
+	digitalWrite(trigRight);
+	digitalWrite(trigLeft);
 	*/
 }
 
