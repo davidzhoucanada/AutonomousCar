@@ -18,6 +18,7 @@ public class BluetoothConnection {
     private BluetoothAdapter myBluetoothAdapter;
     private BluetoothSocket myBluetoothSocket;
     private BluetoothDevice myDevice;
+    private boolean connectionStatus;
 
     // Input/Output
     private OutputStream myOutputStream;
@@ -25,6 +26,7 @@ public class BluetoothConnection {
     // Constructor for Bluetooth Connection class
     public BluetoothConnection(){
         myBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        connectionStatus = false;
     }
 
     // New thread for connection so main thread isn't blocked
@@ -45,6 +47,7 @@ public class BluetoothConnection {
             try {
                 myBluetoothSocket.connect();
                 myOutputStream = myBluetoothSocket.getOutputStream();
+                connectionStatus = true;
 
             } catch (IOException e) {
 
@@ -64,6 +67,7 @@ public class BluetoothConnection {
         return myDevice;
     }
 
+    // Returns the Bluetooth socket used
     public BluetoothSocket getMyBluetoothSocket(){
         return myBluetoothSocket;
     }
@@ -71,6 +75,11 @@ public class BluetoothConnection {
     // Connects to device via Bluetooth
     public void connect(BluetoothDevice device) {
         new ConnectThread(device).start();
+    }
+
+    // Returns status of connection (connected/not connected)
+    public boolean isConnected() {
+        return connectionStatus;
     }
 
     // Sends a message
