@@ -10,7 +10,13 @@ SoftwareSerial mySerial(12, 13); // RX, TX
 #define trigLeft 10 // HC-SR04 trig left
 #define echoLeft 11	// HC-SR04 echo left
 
+const long interval = 14;
+
 char i;
+long timeRight, timeLeft;
+int distanceRight, distanceLeft;
+long currentInterval, previousInterval;
+boolean readSensor=false;
 
 void _stop();
 void forward();
@@ -63,6 +69,18 @@ void backLeft(){
 	digitalWrite(right, LOW);
 }
 
+void autonomous(int distanceRight, int distanceLeft){
+	if(distanceRight >= 5 && distanceLeft >= 5){
+		forward();
+	}else if(distanceRight < 5 && distanceLeft >= 5){
+		forwardLeft();
+	}else if(distanceRight >= 5 && distanceLeft < 5){
+		forwardRight();
+	}else{
+		// ?????
+	}
+}
+
 void setup(){
     Serial.begin(9600);
  
@@ -80,6 +98,7 @@ void setup(){
 }
 
 void loop(){
+	// manual Bluetooth controls via Android app
 	if(mySerial.available()>0){
 		i = (char)mySerial.read();
     
@@ -114,9 +133,28 @@ void loop(){
 			}
 		}
 	}
-	/*
-	digitalWrite(trigRight);
-	digitalWrite(trigLeft);
-	*/
+	
+	// ultrasonic range sensor
+	currentInterval = micros();
+	if(readSensor){
+		if(currentInterval - previousInterval <= 2){
+			digitalWrite(trigRight, LOW);
+			digitalWrite(trigLeft, LOW);
+		}else if(currentInterval - previousInterval <=12){
+			digitalWrite(trigRight, HIGH);
+			digitalWrite(trigLeft, HIGH);
+		}else{
+			timeRight = pulseIn(echoRight, HIGH);
+			timeLeft = pulseIn(echoLeft, HIGH);
+			distanceRight = timeRight*0.034/2;
+			distanceLeft = timeLeft*0.034/2;
+			readSensor = false;
+
+			//autonomous(distanceRight, distanceLeft);
+		}
+	}else if(currentInterval-previousInterval >= interval){
+		previousInterval = currentInterval;
+		readSensor = true;
+	}
 }
 
