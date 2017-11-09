@@ -1,79 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/screen"
+    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context="com.autonomouscarapp.autonomouscar.MotorControl">
 
-    <Button
-        android:id="@+id/forwardLeftButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Fwd Left"
-        android:onClick="forwardLeft"
-        android:layout_marginTop="120dp"
-        android:layout_marginStart="35dp"
-        android:layout_marginLeft="35dp" />
+    <RelativeLayout
+        android:id="@+id/controlWheelBox"
+        android:orientation="vertical"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent">
 
-    <Button
-        android:id="@+id/forwardButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Forward"
-        android:onClick="forward"
-        android:layout_toRightOf="@id/forwardLeftButton"
-        android:layout_alignTop="@id/forwardLeftButton"
-        android:layout_marginStart="15dp"
-        android:layout_marginLeft="15dp" />
+        <ImageView
+            android:id="@+id/controlWheelOuter"
+            android:src="@drawable/control_wheel_outer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true" />
 
-    <Button
-        android:id="@+id/backwardButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Backward"
-        android:onClick="back"
-        android:layout_below="@id/forwardButton"
-        android:layout_alignStart="@id/forwardButton"
-        android:layout_alignLeft="@id/forwardButton"
-        android:layout_marginTop="10dp" />
-
-    <Button
-        android:id="@+id/stopButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Stop"
-        android:onClick="stop"
-        android:layout_below="@id/backwardButton"
-        android:layout_alignLeft="@id/backwardButton"
-        android:layout_marginTop="10dp" />
-
-    <Button
-        android:id="@+id/forwardRightButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Fwd Right"
-        android:onClick="forwardRight"
-        android:layout_toRightOf="@id/forwardButton"
-        android:layout_alignTop="@id/forwardButton"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp" />
-
-    <Button
-        android:id="@+id/backwardLeftButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Back Left"
-        android:onClick="backwardLeft"
-        android:layout_alignTop="@id/backwardButton"
-        android:layout_alignLeft="@id/forwardLeftButton" />
-
-    <Button
-        android:id="@+id/backwardRightButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Back Right"
-        android:onClick="backwardRight"
-        android:layout_alignLeft="@id/forwardRightButton"
-        android:layout_alignTop="@id/backwardButton"/>
-</RelativeLayout>
+        <ImageView
+            android:id="@+id/controlWheelInner"
+            android:src="@drawable/control_wheel_inner"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_centerInParent="true"/>
+    </RelativeLayout>
+</android.support.constraint.ConstraintLayout>
