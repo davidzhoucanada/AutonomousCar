@@ -10,7 +10,7 @@ SoftwareSerial mySerial(12, 13); // RX, TX
 #define trigLeft 8  // HC-SR04 trig left
 #define echoLeft 9  // HC-SR04 echo left
 #define ENA 10 // PWM control for forward/backward
-#define ENB 11 // PWM control for right/left;
+#define ENB 11 // PWM control for right/left
 // #define MAX_V 255
 // #define MIN_V
 
@@ -85,8 +85,7 @@ void autonomousTest(int distanceRight){
 		Serial.println("going forward");
 		//analogWrite(ENA,60);
 		forward();
-	}
-	else{
+	}else{
 		Serial.println("else");
 		//analogWrite(ENA,60);
 		back();
@@ -113,9 +112,9 @@ void setup(){
 
 void loop(){
 	// manual Bluetooth controls via Android app if input is available, else autonomous
-	int index=0;
+	/*int index=0;
 	while(Serial.available()>0){
-		command[index++]=Serial.read();
+		command[index++] = Serial.read();
 	}
 	speed = atoi(&command[2])*100+atoi(&command[3])*10+atoi(&command[4])*1;
 	if(strlen(command)==1){
@@ -155,7 +154,10 @@ void loop(){
 			turnBackRight();
 			// break;
 		}
-	}
+	}*/
+
+	
+	/////////////// old manual controls via Bluetooth
 	/*
 	if(mySerial.available()>0){
 		i = (char)mySerial.read();
