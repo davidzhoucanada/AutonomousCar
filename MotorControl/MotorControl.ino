@@ -11,7 +11,13 @@ SoftwareSerial mySerial(12, 13); // RX, TX
 #define echoLeft 9  // HC-SR04 echo left
 #define ENA 10 // PWM control for forward/backward
 #define ENB 11 // PWM control for right/left;
+// #define MAX_V 255
+// #define MIN_V
 
+char *command;
+int direc = 0;
+int speed = 0;
+// float angle = 0;
 char i;
 long timeRight, timeLeft;
 int distanceRight, distanceLeft;
@@ -107,6 +113,49 @@ void setup(){
 
 void loop(){
 	// manual Bluetooth controls via Android app if input is available, else autonomous
+	int index=0;
+	while(Serial.available()>0){
+		command[index++]=Serial.read();
+	}
+	speed = atoi(&command[2])*100+atoi(&command[3])*10+atoi(&command[4])*1;
+	if(strlen(command)==1){
+		_stop();
+		// break;
+	}
+	else if(command[0]=='0'){
+		if(command[1]=='0'){ //00 forward
+			analogWrite(ENA,speed);
+			forward();
+			// break;
+		}
+		else if(command[1]=='2'){ //02 forward left
+			analogWrite(ENA,speed);
+			turnLeft();
+			// break;
+		}
+		else if(command[1]=='3'){ //03 forward right
+			analogWrite(ENA,speed);
+			turnRight();
+			// break;
+		}
+	}
+	else if(command[0]=='1'){
+		if(command[1]=='1'){ //11 backward
+			analogWrite(ENA,speed);
+			back();
+			// break;
+		}
+		else if(command[1]=='2'){ //12 backleft
+			analogWrite(ENA,speed);
+			turnBackLeft();
+			// break;
+		}
+		else if(command[1]=='3'){ //13 backright
+			analogWrite(ENA,speed);
+			turnBackRight();
+			// break;
+		}
+	}
 	/*
 	if(mySerial.available()>0){
 		i = (char)mySerial.read();
