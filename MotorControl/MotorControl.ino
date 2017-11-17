@@ -1,83 +1,94 @@
 #include <SoftwareSerial.h> 
 SoftwareSerial mySerial(12, 13); // RX, TX
 
-#define back 2	// L298N back (blue)
-#define forward 3	// L298N forward (green)
-#define left 4	// L298N left (yellow)
-#define right 5	// L298N right (orange)
-#define trigRight 8 // HC-SR04 trig right
-#define echoRight 9 // HC-SR04 echo right
-#define trigLeft 10 // HC-SR04 trig left
-#define echoLeft 11	// HC-SR04 echo left
+#define IN1 2 // L298N back (blue)
+#define IN2 3 // L298N forward (green)
+#define IN3 4 // L298N left (yellow)
+#define IN4 5 // L298N right (orange)
+#define trigRight 6 // HC-SR04 trig right
+#define echoRight 7 // HC-SR04 echo right
+#define trigLeft 8  // HC-SR04 trig left
+#define echoLeft 9  // HC-SR04 echo left
+#define ENA 10 // PWM control for forward/backward
+#define ENB 11 // PWM control for right/left
+// #define MAX_V 255
+// #define MIN_V
 
-const long interval = 14;
-
+char *command;
+int direc = 0;
+int speed = 0;
+// float angle = 0;
 char i;
 long timeRight, timeLeft;
 int distanceRight, distanceLeft;
-long currentInterval, previousInterval;
-boolean readSensor=false;
 
 void _stop();
 void forward();
 void back();
-void turnRight();
-void turnLeft();
-void turnBackRight();
-void turnBackLeft();
+void forwardRight();
+void forwardLeft();
+void backRight();
+void backLeft();
 
 void _stop(){
-	digitalWrite(back, LOW);
-	digitalWrite(forward, LOW);
-	digitalWrite(left, LOW);
-	digitalWrite(right, LOW);
+	digitalWrite(IN1, LOW);
+	digitalWrite(IN2, LOW);
+	digitalWrite(IN3, LOW);
+	digitalWrite(IN4, LOW);
 }
 void forward(){
-	digitalWrite(back, LOW);
-	digitalWrite(forward, HIGH);
-	digitalWrite(left, LOW);
-	digitalWrite(right, LOW);
+	digitalWrite(IN1, LOW);
+	digitalWrite(IN2, HIGH);
+	digitalWrite(IN3, LOW);
+	digitalWrite(IN4, LOW);
 }
 void back(){
-	digitalWrite(back, HIGH);
-	digitalWrite(forward, LOW);
-	digitalWrite(left, LOW);
-	digitalWrite(right, LOW);
+	digitalWrite(IN1, HIGH);
+	digitalWrite(IN2, LOW);
+	digitalWrite(IN3, LOW);
+	digitalWrite(IN4, LOW);
 }
 void forwardRight(){
-	digitalWrite(back, LOW);
-	digitalWrite(forward, HIGH);
-	digitalWrite(left, LOW);
-	digitalWrite(right, HIGH);
+	digitalWrite(IN1, LOW);
+	digitalWrite(IN2, HIGH);
+	digitalWrite(IN3, LOW);
+	digitalWrite(IN4, HIGH);
 }
 void forwardLeft(){
-	digitalWrite(back, LOW);
-	digitalWrite(forward, HIGH);
-	digitalWrite(left, HIGH);
-	digitalWrite(right, LOW);
+	digitalWrite(IN1, LOW);
+	digitalWrite(IN2, HIGH);
+	digitalWrite(IN3, HIGH);
+	digitalWrite(IN4, LOW);
 }
 void backRight(){
-	digitalWrite(back, HIGH);
-	digitalWrite(forward, LOW);
-	digitalWrite(left, LOW);
-	digitalWrite(right, HIGH);
+	digitalWrite(IN1, HIGH);
+	digitalWrite(IN2, LOW);
+	digitalWrite(IN3, LOW);
+	digitalWrite(IN4, HIGH);
 }
 void backLeft(){
-	digitalWrite(back, HIGH);
-	digitalWrite(forward, LOW);
-	digitalWrite(left, HIGH);
-	digitalWrite(right, LOW);
+	digitalWrite(IN1, HIGH);
+	digitalWrite(IN2, LOW);
+	digitalWrite(IN3, HIGH);
+	digitalWrite(IN4, LOW);
 }
 
 void autonomous(int distanceRight, int distanceLeft){
-	if(distanceRight >= 5 && distanceLeft >= 5){
+	if(distanceRight >= 5 && distanceLeft >= 5) forward();
+	else if(distanceRight < 5 && distanceLeft >= 5) forwardLeft();
+	else if(distanceRight >= 5 && distanceLeft < 5) forwardRight();
+	//else
+}
+
+void autonomousTest(int distanceRight){
+	if(distanceRight >= 10){
+		Serial.println("going forward");
+		//analogWrite(ENA,60);
 		forward();
-	}else if(distanceRight < 5 && distanceLeft >= 5){
-		forwardLeft();
-	}else if(distanceRight >= 5 && distanceLeft < 5){
-		forwardRight();
 	}else{
-		// ?????
+		Serial.println("else");
+		//analogWrite(ENA,60);
+		back();
 	}
 }
 
@@ -87,10 +98,12 @@ void setup(){
     // HC-06 default serial speed is 9600
     mySerial.begin(9600);
 
-    pinMode(back, OUTPUT);
-    pinMode(forward, OUTPUT);
-    pinMode(left, OUTPUT);
-    pinMode(right, OUTPUT);
+    pinMode(IN1, OUTPUT);
+    pinMode(IN2, OUTPUT);
+    pinMode(IN3, OUTPUT);
+    pinMode(IN4, OUTPUT);
+    pinMode(ENA, OUTPUT);
+    pinMode(ENB, OUTPUT);
     pinMode(trigRight, OUTPUT);
     pinMode(echoRight, INPUT);
     pinMode(trigLeft, OUTPUT);
@@ -98,7 +111,54 @@ void setup(){
 }
 
 void loop(){
-	// manual Bluetooth controls via Android app
+	// manual Bluetooth controls via Android app if input is available, else autonomous
+	/*int index = 0;
+	while(Serial.available() > 0){
+		command[index++] = Serial.read();
+	}
+	speed = atoi(&command[2])*100+atoi(&command[3])*10+atoi(&command[4])*1;
+	if(strlen(command) == 1){
+		_stop();
+		// break;
+	}
+	else if(command[0] == '0'){
+		if(command[1] == '0'){ //00 forward
+			analogWrite(ENA, speed);
+			forward();
+			// break;
+		}
+		else if(command[1] == '2'){ //02 forward left
+			analogWrite(ENA, speed);
+			turnLeft();
+			// break;
+		}
+		else if(command[1] == '3'){ //03 forward right
+			analogWrite(ENA, speed);
+			turnRight();
+			// break;
+		}
+	}
+	else if(command[0] == '1'){
+		if(command[1] == '1'){ //11 backward
+			analogWrite(ENA, speed);
+			back();
+			// break;
+		}
+		else if(command[1] == '2'){ //12 backleft
+			analogWrite(ENA, speed);
+			turnBackLeft();
+			// break;
+		}
+		else if(command[1] == '3'){ //13 backright
+			analogWrite(ENA, speed);
+			turnBackRight();
+			// break;
+		}
+	}*/
+
+	
+	/////////////// old manual controls via Bluetooth
+	/*
 	if(mySerial.available()>0){
 		i = (char)mySerial.read();
     
@@ -132,29 +192,28 @@ void loop(){
 				break;
 			}
 		}
-	}
+	}else{*/
+		// ultrasonic range sensor
+		digitalWrite(trigRight, LOW);
+		//digitalWrite(trigLeft, LOW);
+		delayMicroseconds(2);
 	
-	// ultrasonic range sensor
-	currentInterval = micros();
-	if(readSensor){
-		if(currentInterval - previousInterval <= 2){
-			digitalWrite(trigRight, LOW);
-			digitalWrite(trigLeft, LOW);
-		}else if(currentInterval - previousInterval <=12){
-			digitalWrite(trigRight, HIGH);
-			digitalWrite(trigLeft, HIGH);
-		}else{
-			timeRight = pulseIn(echoRight, HIGH);
-			timeLeft = pulseIn(echoLeft, HIGH);
-			distanceRight = timeRight*0.034/2;
-			distanceLeft = timeLeft*0.034/2;
-			readSensor = false;
-
-			//autonomous(distanceRight, distanceLeft);
-		}
-	}else if(currentInterval-previousInterval >= interval){
-		previousInterval = currentInterval;
-		readSensor = true;
-	}
+		digitalWrite(trigRight, HIGH);
+		//digitalWrite(trigLeft, HIGH);
+		delayMicroseconds(10);
+		digitalWrite(trigRight, LOW);
+		//digitalWrite(trigLeft, LOW);
+	
+		timeRight = pulseIn(echoRight, HIGH);
+		//timeLeft = pulseIn(echoLeft, HIGH);
+		distanceRight = timeRight*0.034/2;
+		//distanceLeft = timeLeft*0.034/2;
+	
+		Serial.println("Distance right, distance left ");
+		Serial.println(distanceRight);
+		//Serial.println(distanceLeft);
+		autonomousTest(distanceRight);
+		//autonomous(distanceRight, distanceLeft);
+	//}
 }
 
