@@ -1,23 +1,21 @@
 package com.autonomouscarapp.autonomouscar;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 
-// Visual Imports
+// Visual Libraries
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
-import android.graphics.PointF;
 
-// Messaging Imports
+// Messaging Libraries
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
-// Bluetooth Imports
+// Bluetooth Libraries
 import android.bluetooth.BluetoothSocket;
 
-// Control Imports
+// Control Libraries
 import android.view.MotionEvent;
 
 public class MotorControl extends AppCompatActivity { // Implement statement is so switch onClick can be used
@@ -172,15 +170,15 @@ public class MotorControl extends AppCompatActivity { // Implement statement is 
                             forwardBackward = -1;
                         }
 
-                        message(leftRight+" "+forwardBackward+" "+speedString);
 
-                        // Sends concatenated command to Arduino in the form of leftRight forwardBackward Speed
+
+                        // Sends concatenated command to Arduino in the form of leftRight forwardBackward Speed,, the ">" is the end message marker
                         if (myBluetoothConnection.isConnected() == true){
                             if (forwardBackward == -1){
-                                myBluetoothConnection.send("4");
+                                myBluetoothConnection.send("99999>");
                             }
                             else {
-                                myBluetoothConnection.send(leftRight+" "+forwardBackward+" "+speedString);
+                                myBluetoothConnection.send(String.valueOf(leftRight)+String.valueOf(forwardBackward)+speedString+">");
                             }
                         }
                     }
@@ -194,11 +192,10 @@ public class MotorControl extends AppCompatActivity { // Implement statement is 
                         controlWheelInner.setX(originalX);
                         controlWheelInner.setY(originalY);
 
-                        // Send stop signal (change to isConnected)
+                        // Send stop signal
                         if (myBluetoothConnection.isConnected() == true)
                         {
-                            message("Stop");
-                            myBluetoothConnection.send("4");
+                            myBluetoothConnection.send("99999>");
                         }
                     }
                     break;
