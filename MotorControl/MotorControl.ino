@@ -1,16 +1,18 @@
-#include <SoftwareSerial.h> 
+#include <SoftwareSerial.h>
 SoftwareSerial mySerial(12, 13); // RX, TX
 
 #define IN1 2 // L298N back (blue)
 #define IN2 3 // L298N forward (green)
 #define IN3 4 // L298N left (yellow)
 #define IN4 5 // L298N right (orange)
-#define trigRight 6 // HC-SR04 trig right
-#define echoRight 7 // HC-SR04 echo right
-#define trigLeft 8  // HC-SR04 trig left
-#define echoLeft 9  // HC-SR04 echo left
-#define ENA 10 // PWM control for forward/backward
-#define ENB 11 // PWM control for right/left
+#define trigRight A0 // HC-SR04 trig right
+#define echoRight A1 // HC-SR04 echo right
+#define trigLeft A2  // HC-SR04 trig left
+#define echoLeft A3  // HC-SR04 echo left
+#define trigBack A4  // HC-SR04 trig forward
+#define echoBack A5  // HC-SR04 echo back
+#define ENA 9 // PWM control for forward/backward
+#define ENB 10 // PWM control for right/left
 // #define MAX_V 255
 // #define MIN_V
 
@@ -19,8 +21,8 @@ int direc = 0;
 int speed = 0;
 // float angle = 0;
 char i;
-long timeRight, timeLeft;
-int distanceRight, distanceLeft;
+long timeRight, timeLeft, timeBack;
+int distanceRight, distanceLeft, distanceBack;
 
 void _stop();
 void forward();
@@ -73,41 +75,63 @@ void backLeft(){
 	digitalWrite(IN4, LOW);
 }
 
-void autonomous(int distanceRight, int distanceLeft){
-	if(distanceRight >= 5 && distanceLeft >= 5) forward();
-	else if(distanceRight < 5 && distanceLeft >= 5) forwardLeft();
-	else if(distanceRight >= 5 && distanceLeft < 5) forwardRight();
-	//else
+void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENAspeed, int ENBspeed){
+	if(distanceRight >= 5 && distanceLeft >= 5){
+		analogWrite(ENA, 150);
+		forward();
+	}else if(distanceRight < 5 && distanceLeft >= 5){
+		while(distanceRight < 5){
+			analogWrite(ENB, 100);
+			forwardLeft();
+			delay(5);
+			backRight();
+			delay(5);
+		}
+	}else if(distanceRight >= 5 && distanceLeft < 5){
+		while(distanceLeft < 5){
+			analogWrite(ENB, 100);
+			forwardRight();
+			delay(5);
+			backLeft();
+			delay(5);
+		}
+	}else{
+		
+	}
 }
-
+/*
 void autonomousTest(int distanceRight){
 	if(distanceRight >= 10){
 		Serial.println("going forward");
-		//analogWrite(ENA,60);
+		digitalWrite(IN1, LOW);
+		digitalWrite(IN2, HIGH);
 		forward();
 	}else{
 		Serial.println("else");
-		//analogWrite(ENA,60);
+		digitalWrite(IN1, HIGH);
+		digitalWrite(IN2, LOW);
 		back();
 	}
-}
+}*/
 
 void setup(){
-    Serial.begin(9600);
- 
-    // HC-06 default serial speed is 9600
-    mySerial.begin(9600);
-
-    pinMode(IN1, OUTPUT);
-    pinMode(IN2, OUTPUT);
-    pinMode(IN3, OUTPUT);
-    pinMode(IN4, OUTPUT);
-    pinMode(ENA, OUTPUT);
-    pinMode(ENB, OUTPUT);
-    pinMode(trigRight, OUTPUT);
-    pinMode(echoRight, INPUT);
-    pinMode(trigLeft, OUTPUT);
-    pinMode(echoLeft, INPUT);
+	Serial.begin(9600);
+	
+	// HC-06 default serial speed is 9600
+	mySerial.begin(9600);
+	
+	pinMode(IN1, OUTPUT);
+	pinMode(IN2, OUTPUT);
+	pinMode(IN3, OUTPUT);
+	pinMode(IN4, OUTPUT);
+	pinMode(ENA, OUTPUT);
+	pinMode(ENB, OUTPUT);
+	pinMode(trigRight, OUTPUT);
+	pinMode(echoRight, INPUT);
+	pinMode(trigLeft, OUTPUT);
+	pinMode(echoLeft, INPUT);
+	pinMode(trigBack, OUTPUT);
+	pinMode(echoBack, INPUT);
 }
 
 void loop(){
@@ -146,16 +170,16 @@ void loop(){
 		}
 		else if(command[1] == '2'){ //12 backleft
 			analogWrite(ENA, speed);
-			turnBackLeft();
+			backLeft();
 			// break;
 		}
 		else if(command[1] == '3'){ //13 backright
 			analogWrite(ENA, speed);
-			turnBackRight();
+			backRight();
 			// break;
 		}
 	}*/
-
+	
 	
 	/////////////// old manual controls via Bluetooth
 	/*
@@ -196,24 +220,32 @@ void loop(){
 		// ultrasonic range sensor
 		digitalWrite(trigRight, LOW);
 		//digitalWrite(trigLeft, LOW);
+		//digitalWrite(trigBack, LOW);
 		delayMicroseconds(2);
-	
+		
 		digitalWrite(trigRight, HIGH);
 		//digitalWrite(trigLeft, HIGH);
+		//digitalWrite(trigBack, HIGH);
 		delayMicroseconds(10);
 		digitalWrite(trigRight, LOW);
 		//digitalWrite(trigLeft, LOW);
-	
+		//digitalWrite(trigBack, LOW);
+		
 		timeRight = pulseIn(echoRight, HIGH);
 		//timeLeft = pulseIn(echoLeft, HIGH);
+		//timeBack = pulseIn(echoBack, HIGH);
 		distanceRight = timeRight*0.034/2;
 		//distanceLeft = timeLeft*0.034/2;
-	
-		Serial.println("Distance right, distance left ");
+		//distanceBack = timeBack*0.034/2;
+		
+		Serial.print("Distance right: ");
 		Serial.println(distanceRight);
+		//Serial.print("Distance left: ");
 		//Serial.println(distanceLeft);
-		autonomousTest(distanceRight);
-		//autonomous(distanceRight, distanceLeft);
+		//Serial.print("Distance back: ");
+		//Serial.println(distanceBack);
+		//autonomousTest(distanceRight);
+		//autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
 	//}
 }
 
