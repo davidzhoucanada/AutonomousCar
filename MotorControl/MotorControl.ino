@@ -77,7 +77,8 @@ void backLeft(){
 
 void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENAspeed, int ENBspeed){
 	if(distanceRight >= 5 && distanceLeft >= 5){
-		analogWrite(ENA, 150);
+		if(distanceBack >= 5) analogWrite(ENA, 150);
+		else analogWrite(ENA, 100);
 		forward();
 	}else if(distanceRight < 5 && distanceLeft >= 5){
 		while(distanceRight < 5){
@@ -96,23 +97,26 @@ void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENA
 			delay(5);
 		}
 	}else{
-		
+		if(distanceBack >= 5){
+			while(distanceRight <5 && distanceLeft < 5){
+				analogWrite(ENB, 100);
+				forwardRight();
+				delay(5);
+				analogWrite(ENB, 150);
+				backLeft();
+				delay(5);
+			}
+		}else{
+			while(distanceRight <5 && distanceLeft < 5 && distanceBack < 5){
+				analogWrite(ENB, 100);
+				forwardRight();
+				delay(5);
+				backLeft();
+				delay(5);
+			}
+		}
 	}
 }
-/*
-void autonomousTest(int distanceRight){
-	if(distanceRight >= 10){
-		Serial.println("going forward");
-		digitalWrite(IN1, LOW);
-		digitalWrite(IN2, HIGH);
-		forward();
-	}else{
-		Serial.println("else");
-		digitalWrite(IN1, HIGH);
-		digitalWrite(IN2, LOW);
-		back();
-	}
-}*/
 
 void setup(){
 	Serial.begin(9600);
@@ -219,33 +223,32 @@ void loop(){
 	}else{*/
 		// ultrasonic range sensor
 		digitalWrite(trigRight, LOW);
-		//digitalWrite(trigLeft, LOW);
-		//digitalWrite(trigBack, LOW);
+		digitalWrite(trigLeft, LOW);
+		digitalWrite(trigBack, LOW);
 		delayMicroseconds(2);
 		
 		digitalWrite(trigRight, HIGH);
-		//digitalWrite(trigLeft, HIGH);
-		//digitalWrite(trigBack, HIGH);
+		digitalWrite(trigLeft, HIGH);
+		digitalWrite(trigBack, HIGH);
 		delayMicroseconds(10);
 		digitalWrite(trigRight, LOW);
-		//digitalWrite(trigLeft, LOW);
-		//digitalWrite(trigBack, LOW);
+		digitalWrite(trigLeft, LOW);
+		digitalWrite(trigBack, LOW);
 		
 		timeRight = pulseIn(echoRight, HIGH);
-		//timeLeft = pulseIn(echoLeft, HIGH);
-		//timeBack = pulseIn(echoBack, HIGH);
+		timeLeft = pulseIn(echoLeft, HIGH);
+		timeBack = pulseIn(echoBack, HIGH);
 		distanceRight = timeRight*0.034/2;
-		//distanceLeft = timeLeft*0.034/2;
-		//distanceBack = timeBack*0.034/2;
+		distanceLeft = timeLeft*0.034/2;
+		distanceBack = timeBack*0.034/2;
 		
 		Serial.print("Distance right: ");
 		Serial.println(distanceRight);
-		//Serial.print("Distance left: ");
-		//Serial.println(distanceLeft);
-		//Serial.print("Distance back: ");
-		//Serial.println(distanceBack);
-		//autonomousTest(distanceRight);
-		//autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
+		Serial.print("Distance left: ");
+		Serial.println(distanceLeft);
+		Serial.print("Distance back: ");
+		Serial.println(distanceBack);
+		autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
 	//}
 }
 
