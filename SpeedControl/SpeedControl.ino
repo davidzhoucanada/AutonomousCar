@@ -4,8 +4,8 @@
 
 SoftwareSerial bluetoothConnection(12, 13); // RX, TX
 
-#define IN1 6        // L298N moveBackwardward (blue)
-#define IN2 3        // L298N moveForward  (green)
+#define IN1 6        // L298N Backward (blue)
+#define IN2 3        // L298N Forward  (green)
 #define IN3 4        // L298N Left (yellow)
 #define IN4 5        // L298N Right (orange)
 
@@ -103,24 +103,35 @@ void loop(){
     }
 
     switch (forwardOrBackward) {
-      case STOP:
+      case '9':
         _stop();
+        break;
       case FORWARD: 
         switch (leftOrRight) {
           case STRAIGHT: 
             moveForward();
+            break;
           case LEFT: 
             moveForwardLeft();
+            break;
           case RIGHT:
             moveForwardRight();
+            break;
         }
+        break;
       case BACKWARD: 
-        case STRAIGHT:
+        switch (leftOrRight) {
+          case STRAIGHT:
           moveBackward();
+          break;
         case LEFT:
           moveBackwardLeft();
+          break;
         case RIGHT:
           moveBackwardRight();
+          break;  
+        }
+      break;
     }
   }
   else {
