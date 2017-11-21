@@ -16,12 +16,12 @@ SoftwareSerial bluetoothConnection(12, 13); // RX, TX
 #define STRAIGHT '4'
 #define STOP '9'
 
+#define trigCentre A2  // HC-SR04 trig centre
+#define echoCentre A3  // HC-SR04 echo centre
 #define trigRight A0 // HC-SR04 trig right
 #define echoRight A1 // HC-SR04 echo right
-#define trigLeft A2  // HC-SR04 trig left
-#define echoLeft A3  // HC-SR04 echo left
-#define trigCentre A4  // HC-SR04 trig forward
-#define echoCentre A5  // HC-SR04 echo forward
+#define trigLeft A4  // HC-SR04 trig left
+#define echoLeft A5  // HC-SR04 echo left
 #define ENA 9 // PWM control for forward/backward
 #define ENB 10 // PWM control for right/left
 
@@ -91,7 +91,7 @@ void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENA
 			analogWrite(ENB, 100);
 			moveForwardLeft();
 			delay(5);
-			moveBackRight();
+			moveBackwardRight();
 			delay(5);
 		}
 	}else if(distanceRight >= 5 && distanceLeft < 5){
@@ -99,7 +99,7 @@ void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENA
 			analogWrite(ENB, 100);
 			moveForwardRight();
 			delay(5);
-			moveBackLeft();
+			moveBackwardLeft();
 			delay(5);
 		}
 	}else{
@@ -109,7 +109,7 @@ void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENA
 				moveForwardRight();
 				delay(5);
 				analogWrite(ENB, 150);
-				moveBackLeft();
+				moveBackwardLeft();
 				delay(5);
 			}
 		}else{
@@ -117,14 +117,15 @@ void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENA
 				analogWrite(ENB, 100);
 				moveForwardRight();
 				delay(5);
-				moveBackLeft();
+				moveBackwardLeft();
 				delay(5);
 			}
 		}
 	}
 }
 
-void setup() {
+void setup(){
+	Serial.begin(9600);
 	bluetoothConnection.begin(9600); // set up Serial library at 9600 bps
 	
 	pinMode(LED_BUILTIN, OUTPUT);
@@ -144,9 +145,10 @@ void setup() {
 }
 
 void loop(){
+	Serial.println("fuck");
 	if(bluetoothConnection.available()){
 		fullMessageReceivedFromApp = "";
-		while bluetoothConnection.available()){
+		while(bluetoothConnection.available()){
 			characterReceivedFromApp = ((byte) bluetoothConnection.read());
 			if(characterReceivedFromApp == '>') break;
 			else fullMessageReceivedFromApp += characterReceivedFromApp;
@@ -193,32 +195,39 @@ void loop(){
 		}
 	}else{
 		digitalWrite(trigRight, LOW);
-		digitalWrite(trigLeft, LOW);
-		digitalWrite(trigCentre, LOW);
 		delayMicroseconds(2);
-		
 		digitalWrite(trigRight, HIGH);
-		digitalWrite(trigLeft, HIGH);
-		digitalWrite(trigCentre, HIGH);
 		delayMicroseconds(10);
 		digitalWrite(trigRight, LOW);
-		digitalWrite(trigLeft, LOW);
-		digitalWrite(trigCentre, LOW);
-		
 		timeRight = pulseIn(echoRight, HIGH);
-		timeLeft = pulseIn(echoLeft, HIGH);
-		timeCentre = pulseIn(echoCentre, HIGH);
 		distanceRight = timeRight*0.034/2;
-		distanceLeft = timeLeft*0.034/2;
-		distanceCentre = timeCentre*0.034/2;
-		
 		Serial.print("Distance right: ");
-		Serial.println(distanceRight);
+		if(distanceRight < 2 || distanceRight > 200) Serial.println("Out of range.");
+		else Serial.println(distanceRight);
+		
+		digitalWrite(trigLeft, LOW);
+		delayMicroseconds(2);
+		digitalWrite(trigLeft, HIGH);
+		delayMicroseconds(10);
+		digitalWrite(trigLeft, LOW);
+		timeLeft = pulseIn(echoLeft, HIGH);
+		distanceLeft = timeLeft*0.034/2;
 		Serial.print("Distance left: ");
-		Serial.println(distanceLeft);
+		if(distanceLeft < 2 || distanceLeft > 200) Serial.println("Out of range.");
+		else Serial.println(distanceLeft);
+		
+		digitalWrite(trigCentre, LOW);
+		delayMicroseconds(2);
+		digitalWrite(trigCentre, HIGH);
+		delayMicroseconds(10);
+		digitalWrite(trigCentre, LOW);
+		timeCentre = pulseIn(echoCentre, HIGH);
+		distanceCentre = timeCentre*0.034/2;
 		Serial.print("Distance centre: ");
-		Serial.println(distanceCentre);
-		autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
+		if(distanceCentre < 2 || distanceCentre > 200) Serial.println("Out of range.");
+		else Serial.println(distanceCentre);
+		
+		//autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
 	}
 }
 
