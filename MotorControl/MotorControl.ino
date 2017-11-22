@@ -1,254 +1,241 @@
-#include <SoftwareSerial.h>
-SoftwareSerial mySerial(12, 13); // RX, TX
+#include <SoftwareSerial.h> 
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <NewPing.h>
 
-#define IN1 2 // L298N back (blue)
-#define IN2 3 // L298N forward (green)
-#define IN3 4 // L298N left (yellow)
-#define IN4 5 // L298N right (orange)
+SoftwareSerial bluetoothConnection(12, 13); // RX, TX
+#define IN2 3        // L298N Forward  (green)
+#define IN3 4        // L298N Left (yellow)
+#define IN4 5        // L298N Right (orange)
+#define IN1 6        // L298N Backward (blue)
+
+#define trigCentre A2  // HC-SR04 trig centre
+#define echoCentre A3  // HC-SR04 echo centre
 #define trigRight A0 // HC-SR04 trig right
 #define echoRight A1 // HC-SR04 echo right
-#define trigLeft A2  // HC-SR04 trig left
-#define echoLeft A3  // HC-SR04 echo left
-#define trigBack A4  // HC-SR04 trig forward
-#define echoBack A5  // HC-SR04 echo back
-#define ENA 9 // PWM control for forward/backward
-#define ENB 10 // PWM control for right/left
-// #define MAX_V 255
-// #define MIN_V
+#define trigLeft A4  // HC-SR04 trig left
+#define echoLeft A5  // HC-SR04 echo left
 
-char *command;
-int direc = 0;
-int speed = 0;
-// float angle = 0;
-char i;
-long timeRight, timeLeft, timeBack;
-int distanceRight, distanceLeft, distanceBack;
+#define FORWARD '0'
+#define BACKWARD '1'
+#define LEFT '2'
+#define RIGHT '3'
+#define STRAIGHT '4'
+#define STOP '9'
 
-void _stop();
-void forward();
-void back();
-void forwardRight();
-void forwardLeft();
-void backRight();
-void backLeft();
+#define LEFT_SENSOR 0
+#define CENTRE_SENSOR 1
+#define RIGHT_SENSOR 2
+
+String fullMessageReceivedFromApp;
+char characterReceivedFromApp;
+char leftOrRight;
+char forwardOrBackward;
+String speedString;
+int speed = 999;
+
+NewPing sensors[3] = {
+  NewPing(trigLeft, echoLeft),
+  NewPing(trigCentre, echoCentre),
+  NewPing(trigRight, echoRight)
+};
+
+unsigned long distanceFromObstacle[3];
+bool tooClose;
+
+long rightSensorUltrasonicSignalTravelTime, leftSensorUltrasonicSignalTravelTime, centreSensorUltrasonicSignalTravelTime;
+int rightSensorDistanceFromObstacle, leftSensorDistanceFromObstacle, centreSensorDistanceFromObstacle;
 
 void _stop(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
-void forward(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+void moveForward(){
+  digitalWrite(IN1, LOW);
+  analogWrite(IN2, speed);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
-void back(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, LOW);
+void moveForwardLeft(){
+  digitalWrite(IN1, LOW);
+  analogWrite(IN2, speed);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
 }
-void forwardRight(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, HIGH);
+void moveForwardRight(){
+  digitalWrite(IN1, LOW);
+  analogWrite(IN2, speed);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+  delay(50);
 }
-void forwardLeft(){
-	digitalWrite(IN1, LOW);
-	digitalWrite(IN2, HIGH);
-	digitalWrite(IN3, HIGH);
-	digitalWrite(IN4, LOW);
+void moveBackward(){
+  analogWrite(IN1, speed);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
 }
-void backRight(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, LOW);
-	digitalWrite(IN4, HIGH);
+void moveBackwardLeft(){
+  analogWrite(IN1, speed);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
 }
-void backLeft(){
-	digitalWrite(IN1, HIGH);
-	digitalWrite(IN2, LOW);
-	digitalWrite(IN3, HIGH);
-	digitalWrite(IN4, LOW);
-}
-
-void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENAspeed, int ENBspeed){
-	if(distanceRight >= 5 && distanceLeft >= 5){
-		if(distanceBack >= 5) analogWrite(ENA, 150);
-		else analogWrite(ENA, 100);
-		forward();
-	}else if(distanceRight < 5 && distanceLeft >= 5){
-		while(distanceRight < 5){
-			analogWrite(ENB, 100);
-			forwardLeft();
-			delay(5);
-			backRight();
-			delay(5);
-		}
-	}else if(distanceRight >= 5 && distanceLeft < 5){
-		while(distanceLeft < 5){
-			analogWrite(ENB, 100);
-			forwardRight();
-			delay(5);
-			backLeft();
-			delay(5);
-		}
-	}else{
-		if(distanceBack >= 5){
-			while(distanceRight <5 && distanceLeft < 5){
-				analogWrite(ENB, 100);
-				forwardRight();
-				delay(5);
-				analogWrite(ENB, 150);
-				backLeft();
-				delay(5);
-			}
-		}else{
-			while(distanceRight <5 && distanceLeft < 5 && distanceBack < 5){
-				analogWrite(ENB, 100);
-				forwardRight();
-				delay(5);
-				backLeft();
-				delay(5);
-			}
-		}
-	}
+void moveBackwardRight(){
+  analogWrite(IN1, speed);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
 }
 
+/*void autonomous(int rightSensorDistanceFromObstacle, int leftSensorDistanceFromObstacle, int centreSensorDistanceFromObstacle, int ENAspeed, int ENBspeed){
+  if(rightSensorDistanceFromObstacle >= 5 && leftSensorDistanceFromObstacle >= 5){
+    if(centreSensorDistanceFromObstacle >= 5) {
+      analogWrite(ENA, 150);
+    }
+    else {
+      analogWrite(ENA, 100);
+    }
+    moveForward();
+  }else if(rightSensorDistanceFromObstacle < 5 && leftSensorDistanceFromObstacle >= 5){
+    while(rightSensorDistanceFromObstacle < 5){
+      analogWrite(ENB, 100);
+      moveForwardLeft();
+      delay(5);
+      moveBackwardRight();
+      delay(5);
+    }
+  }else if(rightSensorDistanceFromObstacle >= 5 && leftSensorDistanceFromObstacle < 5){
+    while(leftSensorDistanceFromObstacle < 5){
+      analogWrite(ENB, 100);
+      moveForwardRight();
+      delay(5);
+      moveBackwardLeft();
+      delay(5);
+    }
+  }else{
+    if(centreSensorDistanceFromObstacle >= 5){
+      while(rightSensorDistanceFromObstacle <5 && leftSensorDistanceFromObstacle < 5){
+        analogWrite(ENB, 100);
+        moveForwardRight();
+        delay(5);
+        analogWrite(ENB, 150);
+        moveBackwardLeft();
+        delay(5);
+      }
+    }else{
+      while(rightSensorDistanceFromObstacle <5 && leftSensorDistanceFromObstacle < 5 && centreSensorDistanceFromObstacle < 5){
+        analogWrite(ENB, 100);
+        moveForwardRight();
+        delay(5);
+        moveBackwardLeft();
+        delay(5);
+      }
+    }
+  }
+}*/
 void setup(){
-	Serial.begin(9600);
-	
-	// HC-06 default serial speed is 9600
-	mySerial.begin(9600);
-	
-	pinMode(IN1, OUTPUT);
-	pinMode(IN2, OUTPUT);
-	pinMode(IN3, OUTPUT);
-	pinMode(IN4, OUTPUT);
-	pinMode(ENA, OUTPUT);
-	pinMode(ENB, OUTPUT);
-	pinMode(trigRight, OUTPUT);
-	pinMode(echoRight, INPUT);
-	pinMode(trigLeft, OUTPUT);
-	pinMode(echoLeft, INPUT);
-	pinMode(trigBack, OUTPUT);
-	pinMode(echoBack, INPUT);
+  Serial.begin(9600);
+  bluetoothConnection.begin(9600); // set up Serial library at 9600 bps
+  
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  
+  pinMode(trigRight, OUTPUT);
+  pinMode(echoRight, INPUT);
+  pinMode(trigLeft, OUTPUT);
+  pinMode(echoLeft, INPUT);
+  pinMode(trigCentre, OUTPUT);
+  pinMode(echoCentre, INPUT);
 }
-
 void loop(){
-	// manual Bluetooth controls via Android app if input is available, else autonomous
-	/*int index = 0;
-	while(Serial.available() > 0){
-		command[index++] = Serial.read();
-	}
-	speed = atoi(&command[2])*100+atoi(&command[3])*10+atoi(&command[4])*1;
-	if(strlen(command) == 1){
-		_stop();
-		// break;
-	}
-	else if(command[0] == '0'){
-		if(command[1] == '0'){ //00 forward
-			analogWrite(ENA, speed);
-			forward();
-			// break;
-		}
-		else if(command[1] == '2'){ //02 forward left
-			analogWrite(ENA, speed);
-			turnLeft();
-			// break;
-		}
-		else if(command[1] == '3'){ //03 forward right
-			analogWrite(ENA, speed);
-			turnRight();
-			// break;
-		}
-	}
-	else if(command[0] == '1'){
-		if(command[1] == '1'){ //11 backward
-			analogWrite(ENA, speed);
-			back();
-			// break;
-		}
-		else if(command[1] == '2'){ //12 backleft
-			analogWrite(ENA, speed);
-			backLeft();
-			// break;
-		}
-		else if(command[1] == '3'){ //13 backright
-			analogWrite(ENA, speed);
-			backRight();
-			// break;
-		}
-	}*/
-	
-	
-	/////////////// old manual controls via Bluetooth
-	/*
-	if(mySerial.available()>0){
-		i = (char)mySerial.read();
+
+  tooClose = false;
+  
+  if(bluetoothConnection.available()){
+    fullMessageReceivedFromApp = "";
+    while(bluetoothConnection.available()){
+      characterReceivedFromApp = ((byte) bluetoothConnection.read());
+      if(characterReceivedFromApp == '>') break;
+      else fullMessageReceivedFromApp += characterReceivedFromApp;
+      delay(1);
+    }
     
-		switch(i){
-			case'1':{
-				forward();
-				break;
-			}
-			case'2':{
-				back();
-				break;
-			}
-			case'3':{
-				forwardRight();
-				break;
-			}
-			case'4':{
-				forwardLeft();
-				break;
-			}
-			case'5':{
-				backRight();
-				break;
-			}
-			case'6':{
-				backLeft();
-				break;
-			}
-			case'7':{
-				_stop();
-				break;
-			}
-		}
-	}else{*/
-		// ultrasonic range sensor
-		digitalWrite(trigRight, LOW);
-		digitalWrite(trigLeft, LOW);
-		digitalWrite(trigBack, LOW);
-		delayMicroseconds(2);
-		
-		digitalWrite(trigRight, HIGH);
-		digitalWrite(trigLeft, HIGH);
-		digitalWrite(trigBack, HIGH);
-		delayMicroseconds(10);
-		digitalWrite(trigRight, LOW);
-		digitalWrite(trigLeft, LOW);
-		digitalWrite(trigBack, LOW);
-		
-		timeRight = pulseIn(echoRight, HIGH);
-		timeLeft = pulseIn(echoLeft, HIGH);
-		timeBack = pulseIn(echoBack, HIGH);
-		distanceRight = timeRight*0.034/2;
-		distanceLeft = timeLeft*0.034/2;
-		distanceBack = timeBack*0.034/2;
-		
-		Serial.print("Distance right: ");
-		Serial.println(distanceRight);
-		Serial.print("Distance left: ");
-		Serial.println(distanceLeft);
-		Serial.print("Distance back: ");
-		Serial.println(distanceBack);
-		autonomous(distanceRight, distanceLeft, distanceCentre, 0, 0);
-	//}
+    leftOrRight = fullMessageReceivedFromApp[0];
+    forwardOrBackward = fullMessageReceivedFromApp[1];
+    speedString = fullMessageReceivedFromApp.substring(2);
+    speed = speedString.toInt();
+    
+    if(speed < 120) speed = 120;
+  }
+  
+  for (int currentSensor = 0; currentSensor < 3; currentSensor++){
+    distanceFromObstacle[currentSensor] = sensors[currentSensor].ping_cm();
+    if (currentSensor == LEFT_SENSOR){
+      Serial.print("Distance Left: ");
+    }
+    else if (currentSensor == CENTRE_SENSOR){
+      Serial.print("Distance Centre: ");
+    }
+    else {
+      Serial.print("Distance Right: ");
+    }
+    Serial.println(distanceFromObstacle[currentSensor]);
+  }
+
+  for (int currentSensor = 1; currentSensor < 3; currentSensor++) {
+    if (distanceFromObstacle[currentSensor] != 0 && distanceFromObstacle[currentSensor] < 25){
+      speed = 120;
+    }
+    if (distanceFromObstacle[currentSensor] != 0 && distanceFromObstacle[currentSensor] < 15){
+      tooClose = true;
+      // Put the autonomous function here
+      
+      speed = 200;
+      moveBackward();
+      delay(400);
+      _stop();
+      break;
+    }
+  }
+  
+  if (tooClose == false) {    
+    switch(forwardOrBackward){
+      case STOP:
+        _stop();
+        break;
+      case FORWARD: 
+        switch(leftOrRight){
+          case STRAIGHT: 
+            moveForward();
+            break;
+          case LEFT: 
+            moveForwardLeft();
+            break;
+          case RIGHT:
+            moveForwardRight();
+            break;
+        }
+        break;
+      case BACKWARD:
+        switch(leftOrRight){
+          case STRAIGHT:
+            moveBackward();
+            break;
+          case LEFT:
+            moveBackwardLeft();
+            break;
+          case RIGHT:
+            moveBackwardRight();
+            break;
+        }
+        break;
+    }
+  } 
 }
 
