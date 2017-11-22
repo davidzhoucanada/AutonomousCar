@@ -44,9 +44,6 @@ NewPing sensors[3] = {
 unsigned long distances[3];
 bool tooClose;
 
-long timeRight, timeLeft, timeCentre;
-int distanceRight, distanceLeft, distanceCentre;
-
 void _stop(){
 	digitalWrite(IN1, LOW);
 	digitalWrite(IN2, LOW);
@@ -91,16 +88,16 @@ void moveBackwardRight(){
 	digitalWrite(IN4, HIGH);
 }
 
-void autonomous(int distanceRight, int distanceLeft, int distanceCentre, int ENAspeed, int ENBspeed){
+void autonomous(int distances[]){
 	speed = 150;
-	if(distanceCentre >= 10 && distanceCentre <= 15){                   // if distanceCentre small move forward slowly
+	if(distances[CENTRE_SENSOR] >= 10 && distances[CENTRE_SENSOR] <= 15){                   // if distance centre small move forward slowly
 		speed = 120;
 		moveForward();
-	}else if(distanceCentre > 15) moveFoward();                         // if distanceCentre greater move forward normally
-	else if(distanceCentre<=15 && distanceRight<=15 && distanceLeft>15) moveFowardLeft(); // if only distanceLeft big turn left
-	else if(distanceCentre<=15 && distanceLeft<=15 && distanceRight>15) moveFowardRight(); // if only distanceRight big turn right
-	else{                                                               // else turn right in place until distanceCentre is larger
-		while(distanceCentre < 10){
+	}else if(distances[CENTRE_SENSOR] > 15) moveFoward();                         // if distance centre greater move forward normally
+	else if(distances[CENTRE_SENSOR]<=15 && distances[RIGHT_SENSOR]<=15 && distances[LEFT_SENSOR]>15) moveFowardLeft(); // if only distance left big turn left
+	else if(distances[CENTRE_SENSOR]<=15 && distances[LEFT_SENSOR]<=15 && distances[RIGHT_SENSOR]>15) moveFowardRight(); // if only distance right big turn right
+	else{                                                               // else turn right in place until distance centre is larger
+		while(distances[CENTRE_SENSOR] < 10){
 			speed = 120;
 			moveForwardRight();
 			delay(20);
@@ -129,8 +126,23 @@ void setup(){
 
 void loop(){
 	tooClose = false;
+
+	for(int currentSensor = 0; currentSensor < 3; currentSensor++){
+		distances[currentSensor] = sensors[currentSensor].ping_cm();
+		if(currentSensor == CENTRE_SENSOR) Serial.print("Distance Centre: ");
+		else if(currentSensor == LEFT_SENSOR) Serial.print("Distance Left: ");
+		else Serial.print("Distance Right: ");
+		Serial.println(distances[currentSensor]);
+	}
 	
-	if(bluetoothConnection.available()){
+	if(distances[CENTRE_SENSOR]<15 && bluetoothConnection.available()){
+		tooClose = true;
+		speed = 200;
+		moveBackward();
+		delay(400);
+		_stop();
+		break;
+	}else if(bluetoothConnection.available()){
 		fullMessageReceivedFromApp = "";
 		while(bluetoothConnection.available()){
 			characterReceivedFromApp = ((byte) bluetoothConnection.read());
@@ -145,31 +157,7 @@ void loop(){
 		speed = speedString.toInt();
 		
 		if(speed < 120) speed = 120;
-	}
-	
-	for(int currentSensor = 0; currentSensor < 3; currentSensor++){
-		distances[currentSensor] = sensors[currentSensor].ping_cm();
-		if(currentSensor == CENTRE_SENSOR) Serial.print("Distance Centre: ");
-		else if(currentSensor == LEFT_SENSOR) Serial.print("Distance Left: ");
-		else Serial.print("Distance Right: ");
-		Serial.println(distances[currentSensor]);
-	}
-	
-	for(int currentSensor=1; currentSensor<3; currentSensor++){
-		if(distances[currentSensor]!=0 && distances[currentSensor] < 25) speed = 120;
-		if(currentSensor==2 && distances[currentSensor]!=0 && distances[currentSensor] < 15){
-			tooClose = true;
-			// Put the autonomous function here
-			
-			speed = 200;
-			moveBackward();
-			delay(400);
-			_stop();
-			break;
-		}
-	}
-	
-	if(tooClose == false){
+		
 		switch(forwardOrBackward){
 			case STOP:
 				_stop();
@@ -201,6 +189,6 @@ void loop(){
 				}
 				break;
 		}
-	}
+	}else if(!bluetoothConnection.available()) //autonomous(distances);
 }
 
