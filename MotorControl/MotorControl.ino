@@ -91,17 +91,6 @@ void moveBackwardRight(){
   digitalWrite(IN4, HIGH);
 }
 
-int determineDistanceFromObstacle(int trigSensor, int echoSensor){
-    digitalWrite(trigSensor, LOW);
-    delayMicroseconds(2);
-    digitalWrite(trigSensor, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(trigSensor, LOW);
-    int sensorUltrasonicSignalTravelTime = pulseIn(echoSensor, HIGH);
-    int sensorDistanceFromObstacle = sensorUltrasonicSignalTravelTime*0.034/2;
-    return sensorDistanceFromObstacle;
-}
-
 /*void autonomous(int rightSensorDistanceFromObstacle, int leftSensorDistanceFromObstacle, int centreSensorDistanceFromObstacle, int ENAspeed, int ENBspeed){
   if(rightSensorDistanceFromObstacle >= 5 && leftSensorDistanceFromObstacle >= 5){
     if(centreSensorDistanceFromObstacle >= 5) {
