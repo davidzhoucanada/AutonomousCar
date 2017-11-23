@@ -272,7 +272,7 @@ void loop(){
       autonomousMovement(distancesFromObstacle);  
     }
     else {
-      speed = 130;
+      speed = 150;
       moveForward();
     }
   }
