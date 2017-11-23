@@ -99,20 +99,20 @@ void moveBackwardRight(){
   digitalWrite(IN4, HIGH);
 }
 
-int smallestDistanceFromObstacle(unsigned long distancesFromObstacle[]){
-  int smallestDistanceIndex = 0;
+int closestSensorToObstacle(unsigned long distancesFromObstacle[]){
+  int closestSensor = 0;
   for (int currentSensor = 1; currentSensor < 3; currentSensor++){
-    if (distancesFromObstacle[currentSensor] < distancesFromObstacle[smallestDistanceIndex]){
-      smallestDistanceIndex = currentSensor;
+    if (distancesFromObstacle[currentSensor] < distancesFromObstacle[closestSensor]){
+      closestSensor = currentSensor;
     }
   }
-  return smallestDistanceIndex;
+  return closestSensor;
 }
 
 void avoidObstacle(unsigned long distancesFromObstacle[]){
   speed = 255;
-  int smallestDistanceIndex = smallestDistanceFromObstacle(distancesFromObstacle);
-  switch (smallestDistanceIndex) {
+  int closestSensor = closestSensorToObstacle(distancesFromObstacle);
+  switch (closestSensor) {
     case LEFT_SENSOR:
       moveBackwardLeft();
       delay(250);
@@ -133,8 +133,8 @@ void avoidObstacle(unsigned long distancesFromObstacle[]){
 
 void autonomousMovement(unsigned long distancesFromObstacle[]){
   speed = 255;
-  int smallestDistanceIndex = smallestDistanceFromObstacle(distancesFromObstacle);
-  switch (smallestDistanceIndex) {
+  int closestSensor = closestSensorToObstacle(distancesFromObstacle);
+  switch (closestSensor) {
     case LEFT_SENSOR:
       moveBackwardLeft();
       delay(700);
@@ -188,6 +188,7 @@ void loop(){
     distancesFromObstacle[currentSensor] = sensors[currentSensor].ping_cm();
   }
 
+  // If obstacle is close, reduce speed. If it's too close run avoidance methods.
   for (int currentSensor = 0; currentSensor < 3; currentSensor++){
     if(distancesFromObstacle[currentSensor] < 40){
       speed = 120;
@@ -197,7 +198,8 @@ void loop(){
       break;
     }
   }
-  
+
+  // Receive command from app
   if (bluetoothConnection.available()){
     fullMessageReceivedFromApp = "";
     while (bluetoothConnection.available()){
@@ -212,6 +214,7 @@ void loop(){
     }
   }
 
+  // Changes mode based on whether user control mode or autonomous mode was clicked on app
   if (fullMessageReceivedFromApp.equals(USER_CONTROL)){
     mode = USER_CONTROL;
     fullMessageReceivedFromApp = "";
@@ -232,7 +235,7 @@ void loop(){
       }
   
       switch (forwardOrBackward) {
-        case '9':
+        case STOP:
           _stop();
           break;
         case FORWARD: 
