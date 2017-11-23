@@ -8,6 +8,22 @@
     android:layout_height="match_parent"
     tools:context="com.autonomouscarapp.autonomouscar.MotorControl">
 
+    <Button
+        android:id="@+id/userControlButton"
+        android:text="User Control"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"/>
+
+    <Button
+        android:id="@+id/autonomousModeButton"
+        android:text="Autonomous Mode"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
     <RelativeLayout
         android:id="@+id/outerControlWheelContainer"
         android:orientation="vertical"

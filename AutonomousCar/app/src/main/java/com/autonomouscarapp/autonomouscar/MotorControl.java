@@ -1,14 +1,16 @@
 package com.autonomouscarapp.autonomouscar;
 
 import android.support.v7.app.AppCompatActivity;
-import android.support.constraint.ConstraintLayout;
+
 import android.os.Handler;
 import android.os.Bundle;
 
+import android.support.constraint.ConstraintLayout;
+import android.widget.RelativeLayout;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 
-import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import android.bluetooth.BluetoothSocket;
@@ -21,6 +23,8 @@ public class MotorControl extends AppCompatActivity {
     ImageView innerControlWheel;
     RelativeLayout outerControlWheelContainer;
     ConstraintLayout phoneScreen;
+    Button userControlButton;
+    Button autonomousModeButton;
 
     private BluetoothConnection myBluetoothConnection;
     BluetoothSocket myBluetoothSocket = null;
@@ -39,10 +43,14 @@ public class MotorControl extends AppCompatActivity {
     double pointerRadius; // Distance of pointer from center of outer control wheel
     double maximumPointerRadius;
 
+    int mode;
     int leftOrRight;
     int forwardOrBackward;
     String speedString;
     int speed;
+
+    private static final String USER_CONTROL_MODE = "55555>";
+    private static final String AUTONOMOUS_MODE = "66666>";
 
     private static final int FORWARD = 0;
     private static final int BACKWARD = 1;
@@ -69,7 +77,12 @@ public class MotorControl extends AppCompatActivity {
         outerControlWheelContainer = (RelativeLayout)findViewById(R.id.outerControlWheelContainer);
         outerControlWheel = (ImageView)findViewById(R.id.outerControlWheel);
         innerControlWheel = (ImageView)findViewById(R.id.innerControlWheel);
+        userControlButton = (Button)findViewById(R.id.userControlButton);
+        autonomousModeButton = (Button)findViewById(R.id.autonomousModeButton);
+
         innerControlWheel.setOnTouchListener(innerControlWheelTouchListener);
+        userControlButton.setOnClickListener(userControlButtonClickListener);
+        autonomousModeButton.setOnClickListener(autonomousModeButtonClickListener);
 
         // Sets constant values of control wheel after control wheel view has been set up
         outerControlWheelContainer.post(new Runnable() {
@@ -103,6 +116,30 @@ public class MotorControl extends AppCompatActivity {
             }
         }, 500);
     }
+
+    private View.OnClickListener userControlButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            if (myBluetoothConnection.isConnected() == true){
+                myBluetoothConnection.sendCommand(USER_CONTROL_MODE);
+            }
+            innerControlWheel.setVisibility(View.VISIBLE);
+            outerControlWheel.setVisibility(View.VISIBLE);
+        }
+    };
+
+    private View.OnClickListener autonomousModeButtonClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View view) {
+            if (myBluetoothConnection.isConnected() == true){
+                myBluetoothConnection.sendCommand(AUTONOMOUS_MODE);
+            }
+            innerControlWheel.setVisibility(View.INVISIBLE);
+            outerControlWheel.setVisibility(View.INVISIBLE);
+        }
+    };
 
     private View.OnTouchListener innerControlWheelTouchListener = new View.OnTouchListener() {
 
