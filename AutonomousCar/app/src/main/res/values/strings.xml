@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Autonomous Car</string>
+    <string name="title_activity_gpsmode">Map</string>
 </resources>

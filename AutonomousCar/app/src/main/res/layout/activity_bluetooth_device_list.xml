@@ -9,29 +9,29 @@
 
     <Button
         android:id="@+id/listDevicesButton"
+        android:text="List devices"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="List devices"
-        android:onClick="showPairedDevices"
         android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:onClick="showPairedDevices" />
 
     <TextView
+        android:id="@+id/headerText"
+        android:text="Paired Devices"
+        android:textSize="25dp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Paired Devices"
-        android:id="@+id/pairedDeviceText"
-        android:textSize="25dp"
         android:layout_centerHorizontal="true"
         android:layout_marginStart="25dp"
         android:layout_marginLeft="25dp"
         android:layout_marginTop="35dp"/>
 
     <ListView
+        android:id="@+id/pairedDevicesList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/pairedDeviceListView"
-        android:layout_below="@id/pairedDeviceText"
+        android:layout_below="@id/headerText"
         android:layout_alignParentLeft="true"/>
 
 </RelativeLayout>

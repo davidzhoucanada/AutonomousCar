@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.autonomouscarapp.autonomouscar.CameraMode">
+
+    <ImageView
+        android:id="@+id/pictureTaken"
+        android:layout_width="500dp"
+        android:layout_height="500dp"
+        android:layout_above="@+id/takePictureButton"/>
+
+    <Button
+        android:id="@+id/takePictureButton"
+        android:text="Take Picture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"/>
+
+</RelativeLayout>
