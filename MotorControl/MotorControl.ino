@@ -18,6 +18,9 @@ SoftwareSerial bluetoothConnection(12, 13); // RX, TX
 #define trigLeft A4  // HC-SR04 trig left
 #define echoLeft A5  // HC-SR04 echo left
 
+#define USER_CONTROL "55555"
+#define AUTONOMOUS "66666"
+
 #define FORWARD '0'
 #define BACKWARD '1'
 #define LEFT '2'
@@ -32,11 +35,11 @@ SoftwareSerial bluetoothConnection(12, 13); // RX, TX
 String fullMessageReceivedFromApp;
 char characterReceivedFromApp;
 
+String mode = AUTONOMOUS;
 char leftOrRight;
 char forwardOrBackward;
 String speedString;
 int speed = 0;
-bool isStopped = false;
 
 NewPing sensors[3] = {
   NewPing(trigLeft, echoLeft),
@@ -112,17 +115,17 @@ void avoidObstacle(unsigned long distancesFromObstacle[]){
   switch (smallestDistanceIndex) {
     case LEFT_SENSOR:
       moveBackwardLeft();
-      delay(400);
+      delay(250);
       _stop();
       break;
     case CENTRE_SENSOR:
       moveBackward();
-      delay(400);
+      delay(250);
       _stop();
       break;
     case RIGHT_SENSOR:
       moveBackwardRight();
-      delay(400);
+      delay(250);
       _stop();
       break;      
   }   
@@ -161,15 +164,12 @@ void autonomousMovement(unsigned long distancesFromObstacle[]){
 }
 
 void setup(){
-  bluetoothConnection.begin(9600); // set up Serial library at 9600 bps
-  Serial.begin(9600);
+  bluetoothConnection.begin(9600); 
   
   pinMode(IN1, OUTPUT);
   pinMode(IN2, OUTPUT);
   pinMode(IN3, OUTPUT);
   pinMode(IN4, OUTPUT);
-
-  pinMode(LED_BUILTIN, OUTPUT);
   
   pinMode(trigRight, OUTPUT);
   pinMode(echoRight, INPUT);
@@ -197,22 +197,31 @@ void loop(){
       break;
     }
   }
-  Serial.println(tooCloseToObstacle);
   
   if (bluetoothConnection.available()){
-    if (tooCloseToObstacle == false){
-      fullMessageReceivedFromApp = "";
-      while (bluetoothConnection.available()){
-        characterReceivedFromApp = ((byte) bluetoothConnection.read());
-        if (characterReceivedFromApp == '>'){
-          break;
-        }
-        else {
-          fullMessageReceivedFromApp += characterReceivedFromApp;
-        }
-        delay(1);
+    fullMessageReceivedFromApp = "";
+    while (bluetoothConnection.available()){
+      characterReceivedFromApp = ((byte) bluetoothConnection.read());
+      if (characterReceivedFromApp == '>'){
+        break;
       }
-  
+      else {
+        fullMessageReceivedFromApp += characterReceivedFromApp;
+      }
+      delay(1);
+    }
+  }
+
+  if (fullMessageReceivedFromApp.equals(USER_CONTROL)){
+    mode = USER_CONTROL;
+    fullMessageReceivedFromApp = "";
+  }
+  else if (fullMessageReceivedFromApp.equals(AUTONOMOUS)){
+    mode = AUTONOMOUS;
+    fullMessageReceivedFromApp = "";
+  }
+  else if (mode.equals(USER_CONTROL)){
+    if (tooCloseToObstacle == false){  
       leftOrRight = fullMessageReceivedFromApp[0];
       forwardOrBackward = fullMessageReceivedFromApp[1];
       speedString = fullMessageReceivedFromApp.substring(2);
@@ -225,7 +234,6 @@ void loop(){
       switch (forwardOrBackward) {
         case '9':
           _stop();
-          isStopped = true;
           break;
         case FORWARD: 
           switch (leftOrRight) {
@@ -259,7 +267,7 @@ void loop(){
       avoidObstacle(distancesFromObstacle);
     }
   }
-  else if (isStopped == false) {
+  else if (mode.equals(AUTONOMOUS)) {
     if (tooCloseToObstacle == true){
       autonomousMovement(distancesFromObstacle);  
     }
