@@ -1,5 +1,5 @@
 # AutonomousCar
-Autonomous car made from store-bought RC car. Controlled manually with an Android app via Bluetooth and an Arduino
+Autonomous car made from store-bought RC car. Controlled manually with an Android app via Bluetooth and an Arduino.
 
 ## **Built With**
 * Store-bought RC car
