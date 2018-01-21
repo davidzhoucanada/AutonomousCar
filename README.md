@@ -1,7 +1,7 @@
 # AutonomousCar
 Autonomous car made from store-bought RC car. Controlled manually with an Android app via Bluetooth and an Arduino.
 
-## **Built With**
+## Built With
 * Store-bought RC car
 * Arduino Uno
 * Motor driver
